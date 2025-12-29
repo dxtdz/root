@@ -32,8 +32,6 @@ class CRDSetup:
         self.installDesktopEnvironment()
         self.changewall()
         self.installGoogleChrome()
-        self.installTelegram()
-        self.installQbit()
         self.finish(user)
 
     @staticmethod
@@ -64,47 +62,53 @@ class CRDSetup:
         run_cmd("dpkg -i google-chrome-stable_current_amd64.deb || true")
         run_cmd("apt install -f -y")
         print("✓ Google Chrome đã cài đặt")
-    
-    @staticmethod
-    def installTelegram():
-        print("Cài đặt Telegram...")
-        run_cmd("apt install -y telegram-desktop")
-        print("✓ Telegram đã cài đặt")
 
     @staticmethod
     def changewall():
         print("Đang tải wallpaper...")
-        walls = [
-            ("1280x1024.svg", "1280x1024.svg"),
-            ("1280x800.svg", "1280x800.svg"),
-            ("1600x1200.svg", "1600x1200.svg"),
-            ("1920x1080.svg", "1920x1080.svg"),
-            ("1920x1200.svg", "1920x1200.svg"),
-            ("2560x1440.svg", "2560x1440.svg"),
-            ("2560x1600.svg", "2560x1600.svg"),
-            ("3200x1800.svg", "3200x1800.svg"),
-            ("3200x2000.svg", "3200x2000.svg"),
-            ("3840x2160.svg", "3840x2160.svg"),
-            ("5120x2880.svg", "5120x2880.svg")
-        ]
         
+        # Chỉ tải 1 ảnh nền với kích thước phổ biến
         wall_dir = "/usr/share/backgrounds"
         os.makedirs(wall_dir, exist_ok=True)
         
-        base_url = "https://gitlab.com/chamod12/gcrd_deb_codesandbox.io_rdp/-/raw/main/walls/"
-        for wall in walls:
-            url = f"{base_url}{wall[0]}"
-            dest = f"{wall_dir}/{wall[1]}"
-            run_cmd(f"wget -q {url} -O {dest}")
+        # Tải 1 ảnh nền 1920x1080 (kích thước phổ biến)
+        wallpaper_url = "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+        wallpaper_path = f"{wall_dir}/ubuntu-wallpaper.jpg"
         
-        print("✓ Wallpaper đã thay đổi")
-   
-    @staticmethod
-    def installQbit():
-        print("Cài đặt qBittorrent...")
-        run_cmd("apt update -y")
-        run_cmd("apt install -y qbittorrent")
-        print("✓ qBittorrent đã cài đặt")
+        # Tải ảnh nền
+        run_cmd(f"wget -q -O {wallpaper_path} '{wallpaper_url}'")
+        
+        # Cài đặt ảnh nền mặc định cho XFCE
+        run_cmd("apt install -y xfconf")
+        
+        # Đặt ảnh nền mặc định cho tất cả user
+        xfce_config = f"""[xfce4-desktop]
+last-image={wallpaper_path}
+image-style=5
+color-style=0"""
+        
+        with open("/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml", "w") as f:
+            f.write(f'''<?xml version="1.0" encoding="UTF-8"?>
+
+<channel name="xfce4-desktop" version="1.0">
+  <property name="backdrop" type="empty">
+    <property name="screen0" type="empty">
+      <property name="monitor0" type="empty">
+        <property name="workspace0" type="empty">
+          <property name="last-image" type="string" value="{wallpaper_path}"/>
+          <property name="image-style" type="int" value="5"/>
+          <property name="color-style" type="int" value="0"/>
+        </property>
+      </property>
+    </property>
+  </property>
+</channel>''')
+        
+        # Tạo symbolic link để áp dụng cho user mới
+        run_cmd(f"mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/")
+        run_cmd(f"cp /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/")
+        
+        print("✓ Wallpaper đã thay đổi (1920x1080)")
 
     @staticmethod
     def finish(user):
@@ -114,6 +118,11 @@ class CRDSetup:
         run_cmd(f"id -u {user} 2>/dev/null || useradd -m {user}")
         run_cmd(f"echo '{user}:{password}' | chpasswd")
         run_cmd(f"usermod -aG sudo {user}")
+        
+        # Sao chép cấu hình wallpaper cho user
+        run_cmd(f"mkdir -p /home/{user}/.config/xfce4/xfconf/xfce-perchannel-xml/")
+        run_cmd(f"cp /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml /home/{user}/.config/xfce4/xfconf/xfce-perchannel-xml/")
+        run_cmd(f"chown -R {user}:{user} /home/{user}")
         
         if Autostart:
             autostart_dir = f"/home/{user}/.config/autostart"
