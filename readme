@@ -1,3 +1,4 @@
 https://github.com/NotGamerPiie/pie_vps
 
 bash <(curl -fsSL https://raw.githubusercontent.com/dxtdz/root/main/vps.sh)
+bash <(curl -s https://raw.githubusercontent.com/kendrickcodes98/Youtube-Scripts/refs/heads/main/main.sh)
