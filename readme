@@ -4,3 +4,5 @@ https://github.com/kendrickcodes98/Vps-Youtube
 bash <(curl -fsSL https://raw.githubusercontent.com/dxtdz/root/main/vps.sh)
 bash <(curl -s https://raw.githubusercontent.com/kendrickcodes98/Youtube-Scripts/refs/heads/main/main.sh)
 bash <(curl https://raw.githubusercontent.com/DreamHost2ws/Panel/main/IDXvps)
+sudo apt update && sudo apt upgrade -y 
+sudo apt install xfce4 xfce4-goodies xrdp-y
